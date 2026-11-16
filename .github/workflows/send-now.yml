@@ -1,0 +1,29 @@
+# "Send digest now" relay for the news-digest companion app.
+#
+# The app's token only has access to this repo (Contents + Actions), so it can change
+# settings and start this workflow, but it can't touch the digest code in
+# Porpused15/news-digest. This workflow starts the digest run there, using
+# DIGEST_DISPATCH_TOKEN: a fine-grained token for Porpused15/news-digest with only
+# Actions: read and write.
+#
+# It checks out nothing and runs no repo code, so a changed config.json can't affect it,
+# and the app's token can't edit workflow files (that needs the Workflows permission).
+name: Send digest now
+
+on:
+  workflow_dispatch: {}
+
+permissions: {}  # GITHUB_TOKEN unused
+
+concurrency:
+  group: send-now
+  cancel-in-progress: false
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: gh workflow run digest.yml --repo Porpused15/news-digest --ref main
+        env:
+          GH_TOKEN: ${{ secrets.DIGEST_DISPATCH_TOKEN }}
